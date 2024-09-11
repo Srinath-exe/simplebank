@@ -37,12 +37,12 @@ jobs:
 
     - uses: actions/checkout@v4    
 
-    - name: Install golang-migrate
-      run: |
-        curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-amd64.deb -o migrate.linux-amd64.deb 
-        ls -l migrate.linux-amd64
-        sudo mv migrate.linux-amd64 /usr/local/bin/migrate
-        which migrate
+    # - name: Install golang-migrate
+    #   run: |
+    #     curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.1/migrate.linux-amd64.deb -o migrate.linux-amd64.deb 
+    #     ls -l migrate.linux-amd64
+    #     sudo mv migrate.linux-amd64 /usr/local/bin/migrate
+    #     which migrate
 
     - name: make Migrations
       run: make migrate    
