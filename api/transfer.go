@@ -38,7 +38,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		Amount:    req.Amount,
 	}
 
-	result, err := server.db.TransferTx(ctx, arg)
+	result, err := server.store.TransferTx(ctx, arg)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -50,7 +50,7 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 }
 
 func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency string) bool {
-	account, err := server.db.GetAccount(ctx, accountID)
+	account, err := server.store.GetAccount(ctx, accountID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

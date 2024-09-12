@@ -29,7 +29,7 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		Balance:  0,
 	}
 
-	account, err := server.db.CreateAccount(ctx, arg)
+	account, err := server.store.CreateAccount(ctx, arg)
 
 	if err != nil {
 
@@ -61,7 +61,7 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
-	account, err := server.db.GetAccount(ctx, req.ID)
+	account, err := server.store.GetAccount(ctx, req.ID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -94,7 +94,7 @@ func (server *Server) getAccountsList(ctx *gin.Context) {
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
 
-	accounts, err := server.db.ListAccounts(ctx, arg)
+	accounts, err := server.store.ListAccounts(ctx, arg)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
