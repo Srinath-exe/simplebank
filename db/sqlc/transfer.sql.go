@@ -7,6 +7,9 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"time"
 )
 
 const createTransfer = `-- name: CreateTransfer :one
@@ -106,9 +109,15 @@ func (q *Queries) ListTransfers(ctx context.Context, arg ListTransfersParams) ([
 }
 
 const listTransfersFromAccountId = `-- name: ListTransfersFromAccountId :many
-SELECT id, from_account_id, to_account_id, amount, created_at FROM transfers
-WHERE from_account_id = $1
-ORDER BY id
+SELECT t.id, t.from_account_id, t.to_account_id, t.amount, t.created_at, 
+json_build_object('owner', a1.owner, 'balance', a1.balance) AS from_account,
+json_build_object('owner', a2.owner, 'balance', a2.balance) AS to_account
+FROM transfers t
+INNER JOIN accounts a1 ON t.from_account_id = a1.id
+INNER JOIN accounts a2 ON t.to_account_id = a2.id
+WHERE t.from_account_id = $1
+OR t.to_account_id = $1
+ORDER BY t.created_at
 LIMIT $2
 OFFSET $3
 `
@@ -119,21 +128,33 @@ type ListTransfersFromAccountIdParams struct {
 	Offset        int32 `json:"offset"`
 }
 
-func (q *Queries) ListTransfersFromAccountId(ctx context.Context, arg ListTransfersFromAccountIdParams) ([]Transfer, error) {
+type ListTransfersFromAccountIdRow struct {
+	ID            int64           `json:"id"`
+	FromAccountID int64           `json:"from_account_id"`
+	ToAccountID   int64           `json:"to_account_id"`
+	Amount        int64           `json:"amount"`
+	CreatedAt     time.Time       `json:"created_at"`
+	FromAccount   json.RawMessage `json:"from_account"`
+	ToAccount     json.RawMessage `json:"to_account"`
+}
+
+func (q *Queries) ListTransfersFromAccountId(ctx context.Context, arg ListTransfersFromAccountIdParams) ([]ListTransfersFromAccountIdRow, error) {
 	rows, err := q.db.QueryContext(ctx, listTransfersFromAccountId, arg.FromAccountID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Transfer{}
+	items := []ListTransfersFromAccountIdRow{}
 	for rows.Next() {
-		var i Transfer
+		var i ListTransfersFromAccountIdRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.FromAccountID,
 			&i.ToAccountID,
 			&i.Amount,
 			&i.CreatedAt,
+			&i.FromAccount,
+			&i.ToAccount,
 		); err != nil {
 			return nil, err
 		}
@@ -177,6 +198,66 @@ func (q *Queries) ListTransfersToAccountId(ctx context.Context, arg ListTransfer
 			&i.ToAccountID,
 			&i.Amount,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const seachTransfersByAccountOwner = `-- name: SeachTransfersByAccountOwner :many
+SELECT t.id, t.from_account_id, t.to_account_id, t.amount, t.created_at , 
+json_build_object('owner', a1.owner, 'balance', a1.balance) AS from_account,
+json_build_object('owner', a2.owner, 'balance', a2.balance) AS to_account
+FROM transfers t
+INNER JOIN accounts a1 ON t.from_account_id = a1.id
+INNER JOIN accounts a2 ON t.to_account_id = a2.id
+WHERE a1.owner ILIKE '%' || $3 || '%'
+OR a2.owner ILIKE '%' || $3 || '%'
+LIMIT $1
+OFFSET $2
+`
+
+type SeachTransfersByAccountOwnerParams struct {
+	Limit       int32          `json:"limit"`
+	Offset      int32          `json:"offset"`
+	SearchQuery sql.NullString `json:"search_query"`
+}
+
+type SeachTransfersByAccountOwnerRow struct {
+	ID            int64           `json:"id"`
+	FromAccountID int64           `json:"from_account_id"`
+	ToAccountID   int64           `json:"to_account_id"`
+	Amount        int64           `json:"amount"`
+	CreatedAt     time.Time       `json:"created_at"`
+	FromAccount   json.RawMessage `json:"from_account"`
+	ToAccount     json.RawMessage `json:"to_account"`
+}
+
+func (q *Queries) SeachTransfersByAccountOwner(ctx context.Context, arg SeachTransfersByAccountOwnerParams) ([]SeachTransfersByAccountOwnerRow, error) {
+	rows, err := q.db.QueryContext(ctx, seachTransfersByAccountOwner, arg.Limit, arg.Offset, arg.SearchQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SeachTransfersByAccountOwnerRow{}
+	for rows.Next() {
+		var i SeachTransfersByAccountOwnerRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FromAccountID,
+			&i.ToAccountID,
+			&i.Amount,
+			&i.CreatedAt,
+			&i.FromAccount,
+			&i.ToAccount,
 		); err != nil {
 			return nil, err
 		}

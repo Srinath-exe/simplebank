@@ -6,6 +6,7 @@ package mockdb
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 
 	db "github.com/Srinath-exe/simplebank/db/sqlc"
@@ -315,6 +316,51 @@ func (m *MockStore) ListTransfersToAccountId(arg0 context.Context, arg1 db.ListT
 func (mr *MockStoreMockRecorder) ListTransfersToAccountId(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTransfersToAccountId", reflect.TypeOf((*MockStore)(nil).ListTransfersToAccountId), arg0, arg1)
+}
+
+// SeachEntriesByAccountOwner mocks base method.
+func (m *MockStore) SeachEntriesByAccountOwner(arg0 context.Context, arg1 db.SeachEntriesByAccountOwnerParams) ([]db.Entry, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SeachEntriesByAccountOwner", arg0, arg1)
+	ret0, _ := ret[0].([]db.Entry)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SeachEntriesByAccountOwner indicates an expected call of SeachEntriesByAccountOwner.
+func (mr *MockStoreMockRecorder) SeachEntriesByAccountOwner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SeachEntriesByAccountOwner", reflect.TypeOf((*MockStore)(nil).SeachEntriesByAccountOwner), arg0, arg1)
+}
+
+// SeachTransfersByAccountOwner mocks base method.
+func (m *MockStore) SeachTransfersByAccountOwner(arg0 context.Context, arg1 sql.NullString) ([]db.Transfer, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SeachTransfersByAccountOwner", arg0, arg1)
+	ret0, _ := ret[0].([]db.Transfer)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SeachTransfersByAccountOwner indicates an expected call of SeachTransfersByAccountOwner.
+func (mr *MockStoreMockRecorder) SeachTransfersByAccountOwner(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SeachTransfersByAccountOwner", reflect.TypeOf((*MockStore)(nil).SeachTransfersByAccountOwner), arg0, arg1)
+}
+
+// SearchAccounts mocks base method.
+func (m *MockStore) SearchAccounts(arg0 context.Context, arg1 sql.NullString) ([]db.Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchAccounts", arg0, arg1)
+	ret0, _ := ret[0].([]db.Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchAccounts indicates an expected call of SearchAccounts.
+func (mr *MockStoreMockRecorder) SearchAccounts(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchAccounts", reflect.TypeOf((*MockStore)(nil).SearchAccounts), arg0, arg1)
 }
 
 // TransferTx mocks base method.

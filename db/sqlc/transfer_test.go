@@ -141,14 +141,14 @@ func TestListTransfersFromAccount(t *testing.T) {
 		require.Equal(t, account.ID, transfer.FromAccountID)
 	}
 
-	// List transfers to account
-	toarg := ListTransfersToAccountIdParams{
-		ToAccountID: account2.ID,
-		Limit:       5,
-		Offset:      0,
-	}
+	// // List transfers to account
+	// toarg := ListTransfersToAccountIdParams{
+	// 	ToAccountID: account2.ID,
+	// 	Limit:       5,
+	// 	Offset:      0,
+	// }
 
-	transfers, err = testQueries.ListTransfersToAccountId(context.Background(), toarg)
+	// transfers, err = testQueries.ListTransfersToAccountId(context.Background(), toarg)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, transfers)

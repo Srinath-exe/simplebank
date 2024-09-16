@@ -116,3 +116,50 @@ func (server *Server) getAccountsList(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, accounts)
 
 }
+
+type searchAccountRequest struct {
+	SeachOwnerQuery string `json:"owner" binding:"required"`
+	Limit           *int32 `json:"limit,omitempty"`
+	Offset          *int32 `json:"offset,omitempty"`
+}
+
+func (server *Server) searchAccounts(ctx *gin.Context) {
+	var searchRequest searchAccountRequest
+
+	if err := ctx.ShouldBindJSON(&searchRequest); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	limit := int32(5)  // Set default limit
+	offset := int32(0) // Set default offset
+
+	if searchRequest.Limit != nil && (*searchRequest.Limit > 5 && *searchRequest.Limit < 25) {
+		limit = *searchRequest.Limit
+	}
+	if searchRequest.Offset != nil && (*searchRequest.Offset > 0) {
+		offset = *searchRequest.Offset
+	}
+
+	//  := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	params := db.SearchAccountsParams{
+		Column1: sql.NullString{String: searchRequest.SeachOwnerQuery, Valid: true},
+		Limit:   limit,
+		Offset:  offset,
+	}
+
+	res, err := server.store.SearchAccounts(ctx, params)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}

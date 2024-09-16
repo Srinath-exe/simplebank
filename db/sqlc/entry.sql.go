@@ -7,6 +7,8 @@ package db
 
 import (
 	"context"
+	"database/sql"
+	"time"
 )
 
 const createEntry = `-- name: CreateEntry :one
@@ -117,6 +119,74 @@ type ListEntryFromAccountIdParams struct {
 
 func (q *Queries) ListEntryFromAccountId(ctx context.Context, arg ListEntryFromAccountIdParams) ([]Entry, error) {
 	rows, err := q.db.QueryContext(ctx, listEntryFromAccountId, arg.AccountID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Entry{}
+	for rows.Next() {
+		var i Entry
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.Amount,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const seachEntriesByAccountOwner = `-- name: SeachEntriesByAccountOwner :many
+SELECT e.id, e.account_id, e.amount, e.created_at
+FROM entries e
+INNER JOIN accounts a ON e.account_id = a.id
+WHERE a.owner ILIKE '%' || $3 || '%'
+AND e.created_at >= $4 AND e.created_at <= $5
+AND e.amount >= $6 AND e.amount <= $7
+ORDER BY
+CASE WHEN  $8 = 'amount' AND  $9 = 'ASC' THEN e.amount END  ASC,
+CASE WHEN  $8 = 'amount' AND  $9 = 'DESC' THEN e.amount END DESC,
+CASE WHEN  $8 = 'created_at' AND  $9 = 'ASC' THEN e.created_at END  ASC,
+CASE WHEN  $8 = 'created_at' AND  $9 = 'DESC' THEN e.created_at END DESC,
+CASE WHEN  $8 = 'id' AND  $9 = 'ASC' THEN e.id END  ASC,
+CASE WHEN  $8 = 'id' AND  $9 = 'DESC' THEN e.id END DESC
+LIMIT $1
+OFFSET $2
+`
+
+type SeachEntriesByAccountOwnerParams struct {
+	Limit       int32          `json:"limit"`
+	Offset      int32          `json:"offset"`
+	SearchQuery sql.NullString `json:"search_query"`
+	StartDate   time.Time      `json:"start_date"`
+	EndDate     time.Time      `json:"end_date"`
+	MinAmount   int64          `json:"min_amount"`
+	MaxAmount   int64          `json:"max_amount"`
+	Field       interface{}    `json:"field"`
+	OrderBy     interface{}    `json:"order_by"`
+}
+
+func (q *Queries) SeachEntriesByAccountOwner(ctx context.Context, arg SeachEntriesByAccountOwnerParams) ([]Entry, error) {
+	rows, err := q.db.QueryContext(ctx, seachEntriesByAccountOwner,
+		arg.Limit,
+		arg.Offset,
+		arg.SearchQuery,
+		arg.StartDate,
+		arg.EndDate,
+		arg.MinAmount,
+		arg.MaxAmount,
+		arg.Field,
+		arg.OrderBy,
+	)
 	if err != nil {
 		return nil, err
 	}

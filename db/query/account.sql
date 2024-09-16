@@ -37,3 +37,10 @@ RETURNING *;
 
 -- name: DeleteAccount :exec
 DELETE FROM accounts WHERE id = $1;
+
+-- name: SearchAccounts :many
+SELECT * FROM accounts 
+WHERE owner ILIKE '%' || $1 || '%'
+LIMIT $2
+OFFSET $3;
+
