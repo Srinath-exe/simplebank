@@ -10,6 +10,7 @@ import (
 type Store interface {
 	Querier
 	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
+	DeleteUserWithAccountsTx(ctx context.Context, username string) (TransferTxResult, error)
 }
 
 type SQLStore struct {
@@ -136,4 +137,40 @@ func AddMoney(ctx context.Context, q *Queries, accountID1 int64, amount1 int64, 
 	}
 
 	return
+}
+
+func (store *SQLStore) DeleteUserWithAccountsTx(ctx context.Context, username string) (TransferTxResult, error) {
+	var result TransferTxResult
+
+	err := store.execTx(ctx, func(q *Queries) error {
+		var err error
+
+		accounts, err := q.ListAccounts(ctx, ListAccountsParams{Owner: username})
+
+		fmt.Println(accounts)
+
+		if err != nil {
+			return err
+		}
+
+		for _, account := range accounts {
+			err = q.DeleteAccount(ctx, account.ID)
+			fmt.Println(account.ID)
+
+			if err != nil {
+				return err
+			}
+		}
+
+		fmt.Println(username)
+		err = q.DeleteUser(ctx, username)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return result, err
 }

@@ -110,3 +110,79 @@ func (server *Server) searchEntries(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, entries)
 }
+
+type ListEntryFromAccountIdRequest struct {
+	ID     int64  `json:"id" binding:"required,min=1"`
+	Offset *int32 `json:"offset,omitempty"`
+	Limit  *int32 `json:"limit,omitempty"`
+}
+
+func (server *Server) listEntriesFromAccountId(ctx *gin.Context) {
+
+	var req ListEntryFromAccountIdRequest
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	limit := int32(2)  // Set default limit
+	offset := int32(0) // Set default offset
+
+	if req.Limit != nil && (*req.Limit > 5 && *req.Limit < 25) {
+		limit = *req.Limit
+	}
+	if req.Offset != nil && (*req.Offset > 0) {
+		offset = *req.Offset
+	}
+
+	arg := db.ListEntryFromAccountIdParams{
+		AccountID: req.ID,
+		Limit:     limit,
+		Offset:    offset,
+	}
+
+	entries, err := server.store.ListEntryFromAccountId(ctx, arg)
+
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, entries)
+
+}
+
+type getEntryRequest struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (server *Server) getEntry(ctx *gin.Context) {
+	var req getEntryRequest
+
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	entry, err := server.store.GetEntry(ctx, req.ID)
+
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, entry)
+}

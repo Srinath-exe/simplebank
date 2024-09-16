@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 	"time"
 
@@ -47,61 +46,6 @@ func TestGetTransfer(t *testing.T) {
 	require.Equal(t, transfer.ToAccountID, getTransfer.ToAccountID)
 	require.Equal(t, transfer.ID, getTransfer.ID)
 	require.WithinDuration(t, transfer.CreatedAt, getTransfer.CreatedAt, time.Second)
-}
-
-func TestUpdateTransfer(t *testing.T) {
-	transfer := createRandomTransfer(t)
-	args := UpdateTransferParams{
-		ID:     transfer.ID,
-		Amount: util.RandomMoney(),
-	}
-
-	getTransfer, err := testQueries.UpdateTransfer(context.Background(), args)
-
-	require.NoError(t, err)
-	require.NotEmpty(t, getTransfer)
-	require.Equal(t, args.Amount, getTransfer.Amount)
-	require.Equal(t, transfer.FromAccountID, getTransfer.FromAccountID)
-	require.Equal(t, transfer.ToAccountID, getTransfer.ToAccountID)
-	require.Equal(t, transfer.ID, getTransfer.ID)
-	require.WithinDuration(t, transfer.CreatedAt, getTransfer.CreatedAt, time.Second)
-
-}
-
-func TestDeleteTransfer(t *testing.T) {
-	Transfer := createRandomTransfer(t)
-	err := testQueries.DeleteTransfer(context.Background(), Transfer.ID)
-	require.NoError(t, err)
-
-	getTransfer, err := testQueries.GetTransfer(context.Background(), Transfer.ID)
-
-	require.Error(t, err)
-	require.Error(t, err, sql.ErrNoRows.Error())
-	require.Empty(t, getTransfer)
-
-}
-
-func TestListTransfer(t *testing.T) {
-
-	for i := 0; i < 10; i++ {
-		createRandomTransfer(t)
-	}
-
-	arg := ListTransfersParams{
-		Limit:  5,
-		Offset: 3,
-	}
-
-	Transfers, err := testQueries.ListTransfers(context.Background(), arg)
-
-	require.NoError(t, err)
-	require.NotEmpty(t, Transfers)
-	require.Len(t, Transfers, 5)
-
-	for _, transfer := range Transfers {
-		require.NotEmpty(t, transfer)
-	}
-
 }
 
 func TestListTransfersFromAccount(t *testing.T) {

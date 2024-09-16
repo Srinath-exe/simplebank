@@ -10,11 +10,6 @@ INSERT INTO transfers (
 -- name: GetTransfer :one    
 SELECT * FROM transfers WHERE id = $1 LIMIT 1;
 
--- name: ListTransfers :many
-SELECT * FROM transfers
-ORDER BY id
-LIMIT $1
-OFFSET $2;
 
 -- name: ListTransfersFromAccountId :many
 SELECT t.*, 
@@ -35,15 +30,6 @@ WHERE to_account_id = $1
 ORDER BY id
 LIMIT $2
 OFFSET $3;
-
--- name: UpdateTransfer :one
-UPDATE transfers
-SET amount = $2
-WHERE id = $1
-RETURNING *;
-
--- name: DeleteTransfer :exec
-DELETE FROM transfers WHERE id = $1;
 
 -- name: SeachTransfersByAccountOwner :many
 SELECT t.* , 

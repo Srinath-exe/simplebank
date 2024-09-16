@@ -45,24 +45,35 @@ func errorResponse(err error) gin.H {
 
 func (server *Server) setupRouter() {
 	router := gin.Default()
-	router.POST("/users", server.createUser)
 
+	router.POST("/users", server.createUser)
 	router.POST("users/login", server.loginUser)
 
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
+	authRoutes.GET("/users/:username", server.getUser)
+	authRoutes.POST("/users/update-password", server.updatePassword)
+	authRoutes.GET("/users/delete/:username", server.deleteUser)
+	authRoutes.POST("/users/search", server.searchUsers)
+	authRoutes.POST("/fetch-users", server.getUsers)
+
 	authRoutes.POST("/accounts", server.createAccount)
 	authRoutes.GET("/accounts/:id", server.getAccount)
 	authRoutes.GET("/accounts", server.getAccountsList)
+	authRoutes.GET("/accounts/delete/:id", server.deleteAccount)
+	authRoutes.POST("/accounts/update", server.updateAccount)
+	authRoutes.POST("/accounts/search", server.searchAccounts)
+
+	authRoutes.POST("/entries/search", server.searchEntries)
+	authRoutes.GET("/entries/:id", server.getEntry)
+	authRoutes.POST("/entries", server.listEntriesFromAccountId)
 
 	authRoutes.POST("/transfers", server.createTransfer)
+	authRoutes.GET("/transfers/:id", server.getTransfer)
 	authRoutes.POST("/transfers/account", server.listTransfersFromAccountId)
-	authRoutes.GET("/users/:username", server.getUser)
+	authRoutes.POST("/transfers/search", server.searchTransfers)
 
 	// search routes
-	authRoutes.POST("/accounts/search", server.searchAccounts)
-	authRoutes.POST("/transfers/search", server.searchTransfers)
-	authRoutes.POST("/entries/search", server.searchEntries)
 
 	server.router = router
 }
