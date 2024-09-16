@@ -58,10 +58,11 @@ func TestUpdateAccount(t *testing.T) {
 	}
 	account, err := testQueries.AddAccountBalance(context.Background(), arg)
 	require.NoError(t, err)
+	newBal := createAccount.Balance + arg.Amount
 	require.NotEmpty(t, account)
 	require.Equal(t, createAccount.ID, account.ID)
 	require.Equal(t, createAccount.Owner, account.Owner)
-	require.Equal(t, arg.Amount, account.Balance)
+	require.Equal(t, newBal, account.Balance)
 	require.Equal(t, createAccount.Currency, account.Currency)
 	require.WithinDuration(t, createAccount.CreatedAt, account.CreatedAt, time.Second)
 
@@ -97,5 +98,27 @@ func TestListAccount(t *testing.T) {
 	for _, account := range accounts {
 		require.NotEmpty(t, account)
 		require.Equal(t, lastAccount.Owner, account.Owner)
+	}
+}
+
+func TestSearchAccounts(t *testing.T) {
+	var account Account
+	for i := 0; i < 10; i++ {
+		account = createRandomAccount(t)
+	}
+
+	arg := SearchAccountsParams{
+		Column1: sql.NullString{String: account.Owner, Valid: true},
+		Limit:   5,
+		Offset:  0,
+	}
+
+	accounts, err := testQueries.SearchAccounts(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, accounts, 1)
+
+	for _, account := range accounts {
+		require.NotEmpty(t, account)
+		require.Equal(t, arg.Column1.String, account.Owner)
 	}
 }

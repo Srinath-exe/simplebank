@@ -119,49 +119,6 @@ func (q *Queries) ListTransfersFromAccountId(ctx context.Context, arg ListTransf
 	return items, nil
 }
 
-const listTransfersToAccountId = `-- name: ListTransfersToAccountId :many
-SELECT id, from_account_id, to_account_id, amount, created_at FROM transfers
-WHERE to_account_id = $1
-ORDER BY id
-LIMIT $2
-OFFSET $3
-`
-
-type ListTransfersToAccountIdParams struct {
-	ToAccountID int64 `json:"to_account_id"`
-	Limit       int32 `json:"limit"`
-	Offset      int32 `json:"offset"`
-}
-
-func (q *Queries) ListTransfersToAccountId(ctx context.Context, arg ListTransfersToAccountIdParams) ([]Transfer, error) {
-	rows, err := q.db.QueryContext(ctx, listTransfersToAccountId, arg.ToAccountID, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Transfer{}
-	for rows.Next() {
-		var i Transfer
-		if err := rows.Scan(
-			&i.ID,
-			&i.FromAccountID,
-			&i.ToAccountID,
-			&i.Amount,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const seachTransfersByAccountOwner = `-- name: SeachTransfersByAccountOwner :many
 SELECT t.id, t.from_account_id, t.to_account_id, t.amount, t.created_at , 
 json_build_object('owner', a1.owner, 'balance', a1.balance) AS from_account,

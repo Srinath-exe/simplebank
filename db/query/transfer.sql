@@ -24,12 +24,6 @@ ORDER BY t.created_at
 LIMIT $2
 OFFSET $3;
 
--- name: ListTransfersToAccountId :many
-SELECT * FROM transfers
-WHERE to_account_id = $1
-ORDER BY id
-LIMIT $2
-OFFSET $3;
 
 -- name: SeachTransfersByAccountOwner :many
 SELECT t.* , 

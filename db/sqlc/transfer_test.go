@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -102,6 +103,44 @@ func TestListTransfersFromAccount(t *testing.T) {
 	for _, transfer := range transfers {
 		require.NotEmpty(t, transfer)
 		require.Equal(t, account2.ID, transfer.ToAccountID)
+	}
+
+}
+
+func TestSeachTransfersByAccountOwner(t *testing.T) {
+	account := createRandomAccount(t)
+	account2 := createRandomAccount(t)
+
+	for i := 0; i < 5; i++ {
+		createRandomTransfer(t)
+	}
+
+	for i := 0; i < 5; i++ {
+		arg := CreateTransferParams{
+			FromAccountID: account.ID,
+			ToAccountID:   account2.ID,
+			Amount:        util.RandomMoney(),
+		}
+		_, err := testQueries.CreateTransfer(context.Background(), arg)
+		require.NoError(t, err)
+	}
+
+	// List transfers from account
+	arg := SeachTransfersByAccountOwnerParams{
+		SearchQuery: sql.NullString{String: account.Owner, Valid: true},
+		Limit:       5,
+		Offset:      0}
+
+	transfers, err := testQueries.SeachTransfersByAccountOwner(context.Background(), arg)
+
+	require.NoError(t, err)
+	require.NotEmpty(t, transfers)
+
+	require.Len(t, transfers, 5)
+
+	for _, transfer := range transfers {
+		require.NotEmpty(t, transfer)
+
 	}
 
 }

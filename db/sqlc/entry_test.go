@@ -2,7 +2,9 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/Srinath-exe/simplebank/util"
 	"github.com/stretchr/testify/require"
@@ -34,25 +36,6 @@ func TestGetEntry(t *testing.T) {
 	require.Equal(t, entry1.ID, entry2.ID)
 	require.Equal(t, entry1.AccountID, entry2.AccountID)
 	require.Equal(t, entry1.Amount, entry2.Amount)
-}
-
-func TestListEntries(t *testing.T) {
-	for i := 0; i < 10; i++ {
-		createRandomEntry(t)
-	}
-
-	arg := ListEntryFromAccountIdParams{
-		Limit:  5,
-		Offset: 5,
-	}
-
-	entries, err := testQueries.ListEntryFromAccountId(context.Background(), arg)
-	require.NoError(t, err)
-	require.Len(t, entries, 5)
-
-	for _, entry := range entries {
-		require.NotEmpty(t, entry)
-	}
 }
 
 func TestListEntriesFromAccount(t *testing.T) {
@@ -93,4 +76,37 @@ func TestListEntriesFromAccountInvalid(t *testing.T) {
 	entries, err := testQueries.ListEntryFromAccountId(context.Background(), arg)
 	require.NoError(t, err)
 	require.Empty(t, entries)
+}
+
+func TestSearchEntryByAccount(t *testing.T) {
+	account := createRandomAccount(t)
+	for i := 0; i < 5; i++ {
+		createRandomEntry(t)
+	}
+	for i := 0; i < 5; i++ {
+		arg := CreateEntryParams{
+			AccountID: account.ID,
+			Amount:    60,
+		}
+		_, err := testQueries.CreateEntry(context.Background(), arg)
+		require.NoError(t, err)
+	}
+
+	arg := SeachEntriesByAccountOwnerParams{
+		SearchQuery: sql.NullString{String: account.Owner, Valid: true},
+		Limit:       5,
+		Offset:      0,
+		MaxAmount:   100,
+		MinAmount:   10,
+		StartDate:   time.Now().Add(-time.Hour * 24),
+		EndDate:     time.Now(),
+	}
+	entries, err := testQueries.SeachEntriesByAccountOwner(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, entries, 5)
+
+	for _, entry := range entries {
+		require.NotEmpty(t, entry)
+		require.Equal(t, account.ID, entry.AccountID)
+	}
 }

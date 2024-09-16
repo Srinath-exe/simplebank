@@ -168,21 +168,6 @@ func (mr *MockStoreMockRecorder) GetAccount(arg0, arg1 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockStore)(nil).GetAccount), arg0, arg1)
 }
 
-// GetAccountForUpdate mocks base method.
-func (m *MockStore) GetAccountForUpdate(arg0 context.Context, arg1 int64) (db.Account, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccountForUpdate", arg0, arg1)
-	ret0, _ := ret[0].(db.Account)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetAccountForUpdate indicates an expected call of GetAccountForUpdate.
-func (mr *MockStoreMockRecorder) GetAccountForUpdate(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccountForUpdate", reflect.TypeOf((*MockStore)(nil).GetAccountForUpdate), arg0, arg1)
-}
-
 // GetEntry mocks base method.
 func (m *MockStore) GetEntry(arg0 context.Context, arg1 int64) (db.Entry, error) {
 	m.ctrl.T.Helper()
@@ -286,21 +271,6 @@ func (m *MockStore) ListTransfersFromAccountId(arg0 context.Context, arg1 db.Lis
 func (mr *MockStoreMockRecorder) ListTransfersFromAccountId(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTransfersFromAccountId", reflect.TypeOf((*MockStore)(nil).ListTransfersFromAccountId), arg0, arg1)
-}
-
-// ListTransfersToAccountId mocks base method.
-func (m *MockStore) ListTransfersToAccountId(arg0 context.Context, arg1 db.ListTransfersToAccountIdParams) ([]db.Transfer, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListTransfersToAccountId", arg0, arg1)
-	ret0, _ := ret[0].([]db.Transfer)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListTransfersToAccountId indicates an expected call of ListTransfersToAccountId.
-func (mr *MockStoreMockRecorder) ListTransfersToAccountId(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTransfersToAccountId", reflect.TypeOf((*MockStore)(nil).ListTransfersToAccountId), arg0, arg1)
 }
 
 // SeachEntriesByAccountOwner mocks base method.

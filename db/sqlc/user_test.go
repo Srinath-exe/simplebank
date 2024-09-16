@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
@@ -51,4 +52,85 @@ func TestGetUser(t *testing.T) {
 	require.Equal(t, createUser.FullName, user.FullName)
 	require.WithinDuration(t, createUser.CreatedAt, user.CreatedAt, time.Second)
 	require.WithinDuration(t, createUser.PasswordChangedAt, user.PasswordChangedAt, time.Second)
+}
+
+func TestDeleteUser(t *testing.T) {
+	createUser := createRandomUser(t)
+	err := testQueries.DeleteUser(context.Background(), createUser.Username)
+	require.NoError(t, err)
+
+	user, err := testQueries.GetUser(context.Background(), createUser.Username)
+	require.Error(t, err)
+	require.Empty(t, user)
+}
+
+func TestUpdatePassword(t *testing.T) {
+	user := createRandomUser(t)
+	newpsw := util.RandomString(6)
+	hashedPassword, err := util.HashPassword(newpsw)
+	require.NoError(t, err)
+
+	arg := UpdatePasswordParams{
+		Username:       user.Username,
+		HashedPassword: hashedPassword,
+	}
+	err = testQueries.UpdatePassword(context.Background(), arg)
+	require.NoError(t, err)
+
+	user, err = testQueries.GetUser(context.Background(), user.Username)
+	require.NoError(t, err)
+	require.NotEmpty(t, user)
+	require.Equal(t, arg.Username, user.Username)
+	require.NoError(t, util.CheckPasswordHash(newpsw, user.HashedPassword))
+}
+
+func TestSearchUsers(t *testing.T) {
+	var user User
+	for i := 0; i < 10; i++ {
+		user = createRandomUser(t)
+	}
+
+	arg := SearchUsersParams{
+		Column1: sql.NullString{String: user.Username, Valid: true},
+		Limit:   5,
+		Offset:  0,
+	}
+	users, err := testQueries.SearchUsers(context.Background(), arg)
+	require.NoError(t, err)
+	require.Len(t, users, 1)
+
+	for _, user := range users {
+		require.NotEmpty(t, user)
+		require.Contains(t, user.Username, arg.Column1.String)
+	}
+}
+
+func TestGetUsersParams(t *testing.T) {
+	var users []User
+
+	for i := 0; i < 10; i++ {
+		users = append(users, createRandomUser(t))
+	}
+
+	arg := GetUsersParams{
+		Limit:  5,
+		Offset: 0,
+		Usernames: []string{
+			users[5].Username,
+			users[6].Username,
+			users[7].Username,
+		},
+	}
+
+	selectedUsers, err := testQueries.GetUsers(context.Background(), arg)
+
+	require.NoError(t, err)
+
+	require.Len(t, selectedUsers, 3)
+
+	for i, user := range selectedUsers {
+		require.Contains(t, arg.Usernames, user.Username)
+		require.Contains(t, users, selectedUsers[i])
+	}
+
 }
