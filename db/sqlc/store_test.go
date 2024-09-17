@@ -181,9 +181,8 @@ func TestDeleteUserTx(t *testing.T) {
 	ctx := context.Background()
 	user := createRandomUser(t)
 
-	result, err := store.DeleteUserWithAccountsTx(ctx, user.Username)
+	err := store.DeleteUserWithAccountsTx(ctx, user.Username)
 	require.NoError(t, err)
-	require.Empty(t, result)
 	user, err = testQueries.GetUser(context.Background(), user.Username)
 	require.Error(t, err)
 	require.EqualError(t, err, sql.ErrNoRows.Error())

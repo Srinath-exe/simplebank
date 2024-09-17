@@ -232,45 +232,38 @@ func (server *Server) deleteUser(ctx *gin.Context) {
 		return
 	}
 
-	// user, err := server.store.GetUser(ctx, req.Username)
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
 
-	// if err != nil {
+	if req.Username != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
 
-	// 	if err == sql.ErrNoRows {
-	// 		ctx.JSON(http.StatusNotFound, errorResponse(err))
-	// 		return
-	// 	}
-
-	// 	ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-	// 	return
-	// }
-
-	// authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
-
-	// if user.Username != authPayload.Username {
-	// 	err := errors.New("account doesn't belong to the authenticated user")
-	// 	ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-	// 	return
-	// }
-
-	result, err := server.store.DeleteUserWithAccountsTx(ctx, req.Username)
+	err := server.store.DeleteUserWithAccountsTx(ctx, req.Username)
 
 	if err != nil {
+
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, result)
+	ctx.JSON(http.StatusOK, gin.H{"status": "user deleted"})
 }
 
-type searchUsersRequest struct {
+type SearchUsersRequest struct {
 	Username string `json:"username" binding:"required"`
 	Limit    *int32 `json:"limit,omitempty"`
 	Offset   *int32 `json:"offset,omitempty"`
 }
 
 func (server *Server) searchUsers(ctx *gin.Context) {
-	var req searchUsersRequest
+	var req SearchUsersRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

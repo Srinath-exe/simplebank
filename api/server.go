@@ -53,14 +53,14 @@ func (server *Server) setupRouter() {
 
 	authRoutes.GET("/users/:username", server.getUser)
 	authRoutes.POST("/users/update-password", server.updatePassword)
-	authRoutes.GET("/users/delete/:username", server.deleteUser)
+	authRoutes.DELETE("/users/delete/:username", server.deleteUser)
 	authRoutes.POST("/users/search", server.searchUsers)
 	authRoutes.POST("/fetch-users", server.getUsers)
 
 	authRoutes.POST("/accounts", server.createAccount)
 	authRoutes.GET("/accounts/:id", server.getAccount)
 	authRoutes.GET("/accounts", server.getAccountsList)
-	authRoutes.GET("/accounts/delete/:id", server.deleteAccount)
+	authRoutes.DELETE("/accounts/delete/:id", server.deleteAccount)
 	authRoutes.POST("/accounts/update", server.updateAccount)
 	authRoutes.POST("/accounts/search", server.searchAccounts)
 
