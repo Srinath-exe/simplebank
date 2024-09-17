@@ -10,9 +10,13 @@ on:
 jobs:
   build:
     name: Build Image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-l atest
  
     steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4    
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
